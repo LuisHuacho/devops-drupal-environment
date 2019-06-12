@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+    app-dev:
+        image: drinuxsac/php7-apache:7.2
+        restart: always
+        ports:
+            - '10080:80'
+        volumes:
+            - ./app-web/dev:/var/www/html
+            - ./logs:/var/www/log
+            - ./virtualhost/00-dev.conf:/etc/apache2/sites-available/000-default.conf
+        networks:
+            - env-net            
+    db-dev:
+        image: 'mysql:5.7'
+        command: --key_buffer_size=256M --sort_buffer_size=1M --max_allowed_packet=256M --myisam-recover-options=BACKUP --query_cache_type=1 --query_cache_limit=512M --query_cache_size=1024M --innodb_buffer_pool_size=1G --innodb_log_file_size=64M --innodb_flush_log_at_trx_commit=0 --innodb_thread_concurrency=8 --transaction-isolation=READ-COMMITTED --innodb_flush_method=O_DIRECT --long_query_time=2 --slow_query_log=1 --slow-query-log-file=/var/log/mysql/dev-slow.log --log_error=/var/log/mysql/dev-error.log --general_log_file=/var/log/mysql/dev-mysql.log --general_log=1
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'drupal-dev'
+            MYSQL_USER: 'dbuser'
+            MYSQL_PASSWORD: 'dbpassword'
+            MYSQL_ROOT_PASSWORD: 'dbpasswordroot'
+        ports:
+            - '3307:3306'
+        volumes:
+            - ./app-db/dev:/var/lib/mysql
+            - ./logs:/var/log/mysql
+        networks:
+            - env-net
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 8080:8080
+        networks:
+            - env-net
+networks:
+    env-net:
+        driver: bridge
+
+# Links recommended
+# https://tecadmin.net/enable-logs-in-mysql/
+# https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html
